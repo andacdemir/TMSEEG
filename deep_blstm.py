@@ -1,9 +1,9 @@
 '''
 TMS - EEG
 TMS Artifact removal with deep Bi-LSTM model implementation.
-Copyright (c) 2017 Northeastern SPIRAL.
+Copyright (c) 2018 Northeastern SPIRAL.
 Written by: Andac Demir
-Collaborations:
+Collaborators:
 '''
 
 # Ignore warnings
@@ -68,7 +68,6 @@ if __name__ == "__main__":
         print("You need python 3.6.0 or later to run this script.")
         sys.exit(1)
     
-    
     # Bi-LSTM params:
     hidden_layer1 = 16
     hidden_layer2 = 8
@@ -80,7 +79,6 @@ if __name__ == "__main__":
     batch_size = 2
     dropout = 0.2
 
-    
     # Choose an intensity level for MSO.
     # Acceptable inputs are 20, 30, 40, 50, 60, 70 and 80:
     MSO = int(input("Enter MSO intensity: "))
@@ -92,10 +90,8 @@ if __name__ == "__main__":
     # load the dataset
     eeg_data = load_dataset(MSO)
 
-
     # position of the start indices:
     start_eeg = 9990
-
 
     # total number of samples to be analyzed
     duration = 100
@@ -103,7 +99,6 @@ if __name__ == "__main__":
     tot_channels = eeg_data.shape[0]
     # total number of trials:
     tot_trials = eeg_data.shape[2]
-
 
     # pick a channel number from 0 to total number of channels (62) 
     # in our data:
@@ -115,7 +110,6 @@ if __name__ == "__main__":
         # terminate execution:
         sys.exit(1)
 
-    
     scalers = []
     look_back = 10
     all_inputs = []
@@ -141,7 +135,6 @@ if __name__ == "__main__":
                                              input_data.shape[1]))
         all_inputs.append(input_data)
         all_outputs.append(output)       
-
 
     # TODO:
     # Perform 10-fold cross validation:
@@ -190,10 +183,8 @@ if __name__ == "__main__":
         model.save(model_name)
         print("Model saved to disk.")
 
-
     print("Optimization Finished!")
     print("Elapsed time: ", elapsed(time.time() - start_time))
-
 
 # TODO: Rewrite here after finishing the changes above.
 '''           
@@ -201,7 +192,6 @@ if __name__ == "__main__":
     trainPredictPlt = np.empty_like(dataset)
     trainPredictPlt[:, :] = np.nan
     trainPredictPlt[look_back:len(trainPredict)+look_back, :] = trainPredict
-
 
     # shift test predictions for plotting
     testPredictPlt = np.empty_like(dataset)
