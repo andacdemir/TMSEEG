@@ -6,9 +6,9 @@ import torch.nn.functional as F
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        # Takes 8 input channels, returns 6 output channels, 
+        # Takes 1 input channel, returns 96 output channels, 
         # uses square kernels 3x3 and stride is 1:
-        self.conv1 = nn.Conv2d(8, 96, kernel_size=11, stride=4, padding=2)
+        self.conv1 = nn.Conv2d(1, 96, kernel_size=11, stride=4, padding=2)
         self.pool = nn.MaxPool2d(3, stride=2)
         # Takes 6 input channels, returns 16 output channels,
         # uses square kernels 3x3 and stride is 1:
