@@ -64,7 +64,7 @@ class Temporal_Learning(nn.Module):
         c_t2 = torch.zeros(input.size(0), self.hidden_size, 
                            dtype=torch.double).to(device)
 
-        for i, input_t in enumerate(input.chunk(input.size(1), dim=1)):
+        for input_t in input.chunk(input.size(1), dim=1):
             if self.model == 'lstm':
                 h_t, c_t = self.lstm1(input_t, (h_t, c_t))
                 h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
@@ -75,7 +75,7 @@ class Temporal_Learning(nn.Module):
             output = self.linear(h_t2)
             outputs += [output]
         
-        for i in range(future):# if we should predict the future
+        for _ in range(future): # when the future is predicted
             if self.model == 'lstm':
                 h_t, c_t = self.lstm1(output, (h_t, c_t))
                 h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
@@ -150,7 +150,7 @@ def test_model(model, test_input, test_output, criterion, future, device):
     Called in main()
 '''
 def save_model(model, optimizer, rnn_type):
-    torch.save(model.state_dict(), f="../TrainedModels/volvo-analytics_"+rnn_type+
+    torch.save(model.state_dict(), f="../TrainedModels/tmseeg_"+rnn_type+
                                      "_"+optimizer+"_.model")
     
     
