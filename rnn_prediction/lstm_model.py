@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -32,14 +33,14 @@ class Temporal_Learning(nn.Module):
         if self.model == 'lstm':
             self.lstm1 = nn.LSTMCell(input_size, hidden_size)
             self.lstm2 = nn.LSTMCell(hidden_size, hidden_size)
-            self.linear = nn.Linear(hidden_size, 1)
         elif self.model == 'gru':
             self.gru1 = nn.GRUCell(input_size, hidden_size)
-            self.gru2 = nn.GRUCell(hidden_size, hidden_size)
-            self.linear = nn.Linear(hidden_size, 1)            
+            self.gru2 = nn.GRUCell(hidden_size, hidden_size)        
         else:
             raise ValueError("Acceptable entries for model are 'lstm' and "
                              "'gru' You entered: ", model)
+        
+        self.linear = nn.Linear(hidden_size, 1)            
         
     ''' 
         input: tensor containing the features of the input sequence
@@ -47,6 +48,8 @@ class Temporal_Learning(nn.Module):
         output: tensor containing the output features (h_t) from the last layer
                 of the LSTM, for each t.
                 of shape (channel_size, seq. length)
+        batch = input.size(0)
+        input_t: of shape(batch, input_size)
         h_t: tensor containing the hidden state for t = layer_num
              of shape (batch, hidden_size)
         c_t: tensor containing the cell state for t = layer_num
@@ -63,33 +66,41 @@ class Temporal_Learning(nn.Module):
                            dtype=torch.double).to(device)
         c_t2 = torch.zeros(input.size(0), self.hidden_size, 
                            dtype=torch.double).to(device)
-
-        for input_t in input.chunk(input.size(1), dim=1):
+        
+        for i in range(input.size(1)-self.input_size):
+            input_t = input[:,i:(i+self.input_size)]
             if self.model == 'lstm':
                 h_t, c_t = self.lstm1(input_t, (h_t, c_t))
                 h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
             elif self.model == 'gru':
-                h_t, c_t = self.gru1(input_t, (h_t, c_t))
-                h_t2, c_t2 = self.gru2(h_t, (h_t2, c_t2))
-
+                h_t = self.gru1(input_t, h_t)
+                h_t2 = self.gru2(h_t, h_t2)
+            
             output = self.linear(h_t2)
             outputs += [output]
         
-        for _ in range(future): # when the future is predicted
+        for i in range(future): # for predicting the future samples
+            inputs = outputs[-self.input_size:] 
+            for i, tensor in enumerate(inputs):
+                tensor_list = tensor.cpu().numpy().tolist()
+                flat_list = [item for sublist in tensor_list for item 
+                                                          in sublist]
+                inputs[i] = flat_list
+            inputs = np.array(inputs)
+            inputs = torch.t(torch.from_numpy(inputs))
             if self.model == 'lstm':
-                h_t, c_t = self.lstm1(output, (h_t, c_t))
+                h_t, c_t = self.lstm1(inputs.to(device), (h_t, c_t))
                 h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
             elif self.model == 'gru':
-                h_t, c_t = self.gru1(input_t, (h_t, c_t))
-                h_t2, c_t2 = self.gru2(h_t, (h_t2, c_t2))
+                h_t = self.gru1(inputs.to(device), h_t)
+                h_t2 = self.gru2(h_t, h_t2)
             
             output = self.linear(h_t2)
             outputs += [output]
-            
+        
         outputs = torch.stack(outputs, 1).squeeze(2)
         return outputs
-
-
+        
 '''
     Helper function to set the loss function, optimization and learning rate.
     Factor: by which the learning rate will be reduced
@@ -103,7 +114,7 @@ def set_optimization(model, optimizer):
     # optimization requires to solve large number of variables
     elif optimizer == 'l-bfgs':
         optimizer = optim.LBFGS(model.parameters(), lr=0.8)
-        epochs = 10
+        epochs = 25
     return criterion, optimizer, epochs
     
 '''
