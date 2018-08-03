@@ -95,11 +95,11 @@ def plot_results(input, model_output, input_size, args):
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     def draw(y, color):
-        plt.plot(np.arange(input.size(1)), y[:input.size(1)], color, 
-                 linewidth=2.0)
-        plt.plot(np.arange(input.size(1), input.size(1) + args.future-
-                                                          input_size), 
-                 y[input.size(1):], color + ':', linewidth = 2.0)
+        plt.plot(np.arange(input.size(1)-input_size), 
+                 y[:input.size(1)-input_size], color, linewidth=2.0)
+        plt.plot(np.arange(input.size(1)-input_size, input.size(1)+args.future-
+                                                                   input_size), 
+                 y[input.size(1)-input_size:], color + ':', linewidth=2.0)
     
     draw(model_output[0], 'r')
     draw(model_output[1], 'g')
