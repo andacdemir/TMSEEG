@@ -2,7 +2,10 @@ import sys
 import numpy as np
 import scipy.io as spio
 
-class parser():
+class parser:
+    
+    filepath = '../tmseegData.mat'
+
     ''' 
         Loads the .mat files for the melon data and the tms-eeg data
         MSO: Monophasic TMS-EEG data have stimulation intensities range from 
@@ -17,8 +20,7 @@ class parser():
         self.start = start
         self.end = end
         try:
-            self.eeg_data = spio.loadmat('../tmseegData.mat', 
-                                         squeeze_me=True)
+            self.eeg_data = spio.loadmat(parser.filepath, squeeze_me=True)
             print("TMS-EEG data is successfully loaded.")
         except Exception:
             print("Sorry, tmseegData.mat does not exist.")
