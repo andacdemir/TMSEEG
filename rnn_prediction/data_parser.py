@@ -5,6 +5,8 @@ import scipy.io as spio
 class parser:
     
     filepath = '../tmseegData.mat'
+    start = 9990
+    end = 10090
 
     ''' 
         Loads the .mat files for the melon data and the tms-eeg data
@@ -14,11 +16,9 @@ class parser:
         start: index of the first sample. Samples before start are truncated
         end: index of the first sample. Samples after start are truncated
     '''
-    def __init__(self, MSO, channel, start, end):
+    def __init__(self, MSO, channel):
         self.MSO = 'MSO%d'%MSO
         self.channel = channel
-        self.start = start
-        self.end = end
         try:
             self.eeg_data = spio.loadmat(parser.filepath, squeeze_me=True)
             print("TMS-EEG data is successfully loaded.")
@@ -31,6 +31,19 @@ class parser:
     
     def get_channel(self):
         self.channel_data = self.intensity_data[self.channel, 
-                                                self.start:self.end, :]
+                                                parser.start:parser.end, :]
                
- 
+    # Used as an alternative constructor. 
+    # Returns the tms-eeg dataset for a different MSO intensity.
+    @classmethod
+    def from_intensity(cls, MSO):
+        cls.MSO = MSO
+        return cls
+    
+    # Used as an alternative constructor. 
+    # Returns the tms-eeg dataset for a different MSO intensity.
+    @classmethod
+    def from_channel(cls, channel):
+        cls.channel = channel
+        return cls
+
