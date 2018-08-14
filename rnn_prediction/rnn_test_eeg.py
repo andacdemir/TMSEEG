@@ -41,6 +41,9 @@ def get_args():
     parser.add_argument("-future", type=int, help=("This model predicts future"
                         " number of samples. Enter the number of samples you "
                         "would like to predict."), required=True)
+    parser.add_argument("-scaler", type=str, help=("Scaling method for the "
+                        "input data. Acceptable entries are 'minmax' and "
+                        "'log'."), required=True)
     parser.add_argument("-intensity", type=int, help=("Enter the TMS intensity"
                         " level (MSO). Acceptable entries are 10, 20, 30, 40, "
                         "50, 60, 70, 80."), required=True)
@@ -58,6 +61,7 @@ def get_args():
 def pass_legal_args():
     acceptable_MSO = list(range(10, 90, 10))
     acceptable_channel = list(range(0, 63, 1))
+    acceptable_scalers = ['minmax', 'log']
     args = get_args()
     assert args.save == True or args.save == False, ("\nAcceptable entries for"
            " argument save are True, False, y, n, t, f, 1, 0. You entered: " +
@@ -70,9 +74,12 @@ def pass_legal_args():
            "optimizer are l-bfgs and adam. You entered: " + args.optimizer)
     assert args.future > 0, "Future must be a positive integer."
     assert args.intensity in acceptable_MSO, ("Acceptable entries for TMS "
-           "intensity (MSO) are 10, 20, 30, 40, 50, 60, 70, 80.")
+           "intensity (MSO) are 10, 20, 30, 40, 50, 60, 70, 80.\nYou entered "
+           + args.intensity)
     assert args.channel in acceptable_channel, ("Acceptable entries for the "
-           "EEG channels are 0, 1, 2, 3, ... 62.")
+           "EEG channels are 0, 1, 2, 3, ... 62.\nYou entered " + args.channel)
+    assert args.scaler in acceptable_scalers, ("Acceptable entries for the "
+           "scaling method are 'minmax' and 'log'.\nYou entered " + args.scaler)
     return args
 
 """
@@ -92,8 +99,8 @@ def create_dataset(data, input_size, device):
 '''
 def plot_results(input, model_output, input_size, args):
     plt.figure(figsize=(30,10))
-    plt.title('Predict Future Values for Time Sequences\n(Dashlines are '
-              'Predicted Values)', fontsize=30)
+    plt.title('Predict Future Time Sequences\n(Dashlines are Predicted '
+              'Values)', fontsize=30)
     plt.xlabel('x', fontsize=20)
     plt.ylabel('y', fontsize=20)
     plt.xticks(fontsize=20)
@@ -108,14 +115,14 @@ def plot_results(input, model_output, input_size, args):
     draw(model_output[0], 'r')
     draw(model_output[1], 'g')
     draw(model_output[2], 'b')
-    plt.savefig('results_%s_%s_%s.pdf'%(args.dummy_data.lower(), 
+    plt.savefig('MSO%s_ch%s_%s_%s.pdf'%(args.intensity, args.channel, 
                 args.model.lower(), args.optimizer.lower()))
     plt.show()
 
 def main():
     args = pass_legal_args()
-    dropout = 0.5
-    hidden_size, input_size = 64, 20
+    dropout = 0.3
+    hidden_size, input_size = 64, 5
        
     # Loads the TMS-EEG data of desired intensity and from desired channel
     dp = parser() # Initializes the class, loads TMS-EEG data
