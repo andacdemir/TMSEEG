@@ -128,7 +128,7 @@ def main():
     dp = parser() # Initializes the class, loads TMS-EEG data
     dp.get_intensity(args.intensity) # Calls the get_intensity method
     dp.get_channel(args.channel)     # Calls the get_channel method
-    # Model expects object type of double tensor, input was 'float32'
+    # Model expects object type of double tensor, write as type 'float32'
     data = np.transpose(dp.channel_data).astype('float64')
 
     # Builds the model, sets the device
