@@ -86,18 +86,17 @@ def pass_legal_args():
     return args
 
 '''
-    If in minmax mode, transforms input by scaling them to range (0,1) linearly 
+    If in minmax mode, transforms input by scaling them to range (0,1) linearly
+    Transforms each trial in the range 0-1 seperately  
 '''
 def minmax_scale(data):
-    data_scaled = np.zeros_like(data) 
-    for i in range(data.shape[0]):
-        scaler = MinMaxScaler(feature_range=(0,1))
-        data_scaled[i,:] = scaler.fit_transform(data[i,:])
-        # Saves the scaler object to invert the output later:
-        #with open('Scalers/MinMaxScaler.pkl', 'wb') as f:  
-        #    pickle.dump(scaler, f)  
+    scaler = MinMaxScaler(feature_range=(0,1))
+    data_scaled = scaler.fit_transform(np.transpose(data))
+    # Saves the scaler object to invert the output later:
+    #with open('Scalers/MinMaxScaler.pkl', 'wb') as f:  
+    #    pickle.dump(scaler, f)  
         
-    return data_scaled
+    return np.transpose(data_scaled)
 
 '''
     If in Log Scaling mode, transforms input in 2 dimensions
