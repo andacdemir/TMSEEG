@@ -16,34 +16,21 @@ class parser:
         start: index of the first sample. Samples before start are truncated
         end: index of the first sample. Samples after start are truncated
     '''
-    def __init__(self, MSO, channel):
-        self.MSO = 'MSO%d'%MSO
-        self.channel = channel
+    def __init__(self):
         try:
             self.eeg_data = spio.loadmat(parser.filepath, squeeze_me=True)
             print("TMS-EEG data is successfully loaded.")
         except Exception:
-            print("Sorry, tmseegData.mat does not exist.")
+            print("Sorry, %s does not exist." %parser.filepath)
+            print("Check the filepath.")
             sys.exit(1)  
 
-    def get_intensity(self):
+    def get_intensity(self, intensity):
+        self.MSO = 'MSO%d'%intensity
         self.intensity_data = self.eeg_data[self.MSO]
     
-    def get_channel(self):
+    def get_channel(self, channel):
+        self.channel = channel
         self.channel_data = self.intensity_data[self.channel, 
                                                 parser.start:parser.end, :]
                
-    # Used as an alternative constructor. 
-    # Returns the tms-eeg dataset for a different MSO intensity.
-    @classmethod
-    def from_intensity(cls, MSO):
-        cls.MSO = MSO
-        return cls
-    
-    # Used as an alternative constructor. 
-    # Returns the tms-eeg dataset for a different MSO intensity.
-    @classmethod
-    def from_channel(cls, channel):
-        cls.channel = channel
-        return cls
-
