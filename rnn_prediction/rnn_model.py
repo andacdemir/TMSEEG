@@ -17,12 +17,6 @@ class Temporal_Learning(nn.Module):
         dropout: introduces a dropout layer on the outputs of 
                  each LSTM layer except the last layer, 
                  with dropout probability equal to dropout.
-        bidirectional: if True, becomes a bidirectional LSTM
-        [[[ 0.1,  0.2]],
-        [[ 0.1,  0.2]],
-        [[ 0.3,  0.1]]] --> For instance if this is your input, then
-                            channel_size is 3, batch_size is 1 and 
-                            input_size (features) is 2.
     '''
     def __init__(self, model, input_size, hidden_size, dropout):
         super(Temporal_Learning, self).__init__()
