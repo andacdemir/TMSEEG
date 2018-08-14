@@ -107,12 +107,12 @@ class Temporal_Learning(nn.Module):
 '''
 def set_optimization(model, optimizer):
     criterion = nn.MSELoss()
-    if optimizer == 'adam':
+    if optimizer.lower() == 'adam':
         optimizer = optim.Adam(model.parameters(), lr=0.002)
         epochs = 200
     # L-BFGS is also well suited if we can load all data to train and the 
     # optimization requires to solve large number of variables
-    elif optimizer == 'l-bfgs':
+    elif optimizer.lower() == 'l-bfgs':
         optimizer = optim.LBFGS(model.parameters(), lr=0.8)
         epochs = 25
     return criterion, optimizer, epochs
