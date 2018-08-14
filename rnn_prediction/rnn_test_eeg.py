@@ -111,3 +111,39 @@ def plot_results(input, model_output, input_size, args):
     plt.savefig('results_%s_%s_%s.pdf'%(args.dummy_data.lower(), 
                 args.model.lower(), args.optimizer.lower()))
     plt.show()
+
+def main():
+    args = pass_legal_args()
+    dropout = 0.5
+    hidden_size, input_size = 64, 20
+    
+    # Builds the model, sets the device
+    temporal_model = Temporal_Learning(args.model, input_size, hidden_size,
+                                       dropout)
+    temporal_model, device = set_device(temporal_model)
+    
+    # Loads the TMS-EEG data of desired intensity and from desired channel
+    dp = parser() # Loads TMS-EEG data
+    dp.get_intensity(args.intensity)
+    dp.get_channel(args.channel)
+    data = dp.channel_data 
+
+    train_input, train_output, test_input, test_output = create_dataset(data,
+                                                          input_size, device)
+    criterion, optimizer, epochs = set_optimization(temporal_model, 
+                                                    args.optimizer)  
+    for epoch in range(epochs):
+        print('Epoch: ', epoch+1)
+        train_model(temporal_model, train_input, train_output, optimizer, 
+                    criterion, device)
+        model_output = test_model(temporal_model, test_input, test_output, 
+                                  criterion, args.future, device)    
+    
+    if args.save == True:
+        save_model(temporal_model, args.optimizer.lower(), args.model.lower())
+    
+    plot_results(test_input, model_output, input_size, args)
+
+
+if __name__ == "__main__":
+    main()
