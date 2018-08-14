@@ -127,8 +127,8 @@ def plot_results(input, model_output, input_size, args):
     plt.figure(figsize=(30,10))
     plt.title('Predict Future Time Sequences\n(Dashlines are Predicted '
               'Values)', fontsize=30)
-    plt.xlabel('x', fontsize=20)
-    plt.ylabel('y', fontsize=20)
+    plt.xlabel('Time (Discrete)', fontsize=20)
+    plt.ylabel('TMS Intensity (mV)', fontsize=20)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     def draw(y, color):
