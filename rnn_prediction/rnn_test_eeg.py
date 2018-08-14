@@ -123,9 +123,9 @@ def main():
     temporal_model, device = set_device(temporal_model)
     
     # Loads the TMS-EEG data of desired intensity and from desired channel
-    dp = parser() # Loads TMS-EEG data
-    dp.get_intensity(args.intensity)
-    dp.get_channel(args.channel)
+    dp = parser() # Initializes the class, loads TMS-EEG data
+    dp.get_intensity(args.intensity) # Calls the get_intensity method
+    dp.get_channel(args.channel)     # Calls the get_channel method
     data = dp.channel_data 
 
     train_input, train_output, test_input, test_output = create_dataset(data,
