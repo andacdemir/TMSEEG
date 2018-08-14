@@ -116,18 +116,20 @@ def main():
     args = pass_legal_args()
     dropout = 0.5
     hidden_size, input_size = 64, 20
-    
-    # Builds the model, sets the device
-    temporal_model = Temporal_Learning(args.model, input_size, hidden_size,
-                                       dropout)
-    temporal_model, device = set_device(temporal_model)
-    
+       
     # Loads the TMS-EEG data of desired intensity and from desired channel
     dp = parser() # Initializes the class, loads TMS-EEG data
     dp.get_intensity(args.intensity) # Calls the get_intensity method
     dp.get_channel(args.channel)     # Calls the get_channel method
-    data = dp.channel_data 
+    # Model expects object type of double tensor, input was 'float32'
+    data = np.transpose(dp.channel_data).astype('float64')
 
+    # Builds the model, sets the device
+    temporal_model = Temporal_Learning(args.model, input_size, hidden_size,
+                                       dropout)
+    temporal_model, device = set_device(temporal_model)
+
+    # Splits the data for train/test input/output
     train_input, train_output, test_input, test_output = create_dataset(data,
                                                           input_size, device)
     criterion, optimizer, epochs = set_optimization(temporal_model, 
