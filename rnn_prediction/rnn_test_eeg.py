@@ -1,5 +1,7 @@
 from argparse import ArgumentParser, ArgumentTypeError
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from math import log
 import torch
 from rnn_model import Temporal_Learning, set_optimization, train_model, \
                        test_model, save_model
@@ -8,6 +10,7 @@ import matplotlib.pyplot as plt
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
+import pickle
 
 '''
     Trains network using GPU, if available. Otherwise uses CPU.
@@ -81,6 +84,28 @@ def pass_legal_args():
     assert args.scaler in acceptable_scalers, ("Acceptable entries for the "
            "scaling method are 'minmax' and 'log'.\nYou entered " + args.scaler)
     return args
+
+'''
+    If in minmax mode, transforms input by scaling them to range (0,1) linearly 
+'''
+def minmax_scale(self, data): 
+    scaler = MinMaxScaler(feature_range=(0,1))
+    data_scaled = scaler.fit_transform(data)
+    # Saves the scaler object to invert the output later:
+    #with open('Scalers/MinMaxScaler.pkl', 'wb') as f:  
+    #    pickle.dump(scaler, f)  
+        
+    return data_scaled
+
+'''
+    If in Log Scaling mode, transforms input in 2 dimensions
+    with a log function of base 5.
+'''
+def log_scale(self, data, log_base=5):
+    scaler = lambda t: log(t, log_base)
+    scaler = np.vectorize(scaler)
+    data_scaled = scaler(data)                   
+    return data_scaled
 
 """
     Inputs begin from the first index go until the index before the last
