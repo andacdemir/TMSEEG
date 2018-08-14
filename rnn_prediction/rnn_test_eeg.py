@@ -88,12 +88,14 @@ def pass_legal_args():
 '''
     If in minmax mode, transforms input by scaling them to range (0,1) linearly 
 '''
-def minmax_scale(self, data): 
-    scaler = MinMaxScaler(feature_range=(0,1))
-    data_scaled = scaler.fit_transform(data)
-    # Saves the scaler object to invert the output later:
-    #with open('Scalers/MinMaxScaler.pkl', 'wb') as f:  
-    #    pickle.dump(scaler, f)  
+def minmax_scale(data):
+    data_scaled = np.zeros_like(data) 
+    for i in range(data.shape[0]):
+        scaler = MinMaxScaler(feature_range=(0,1))
+        data_scaled[i,:] = scaler.fit_transform(data[i,:])
+        # Saves the scaler object to invert the output later:
+        #with open('Scalers/MinMaxScaler.pkl', 'wb') as f:  
+        #    pickle.dump(scaler, f)  
         
     return data_scaled
 
@@ -101,7 +103,7 @@ def minmax_scale(self, data):
     If in Log Scaling mode, transforms input in 2 dimensions
     with a log function of base 5.
 '''
-def log_scale(self, data, log_base=5):
+def log_scale(data, log_base=5):
     scaler = lambda t: log(t, log_base)
     scaler = np.vectorize(scaler)
     data_scaled = scaler(data)                   
@@ -155,6 +157,12 @@ def main():
     dp.get_channel(args.channel)     # Calls the get_channel method
     # Model expects object type of double tensor, write as type 'float32'
     data = np.transpose(dp.channel_data).astype('float64')
+
+    # Scaling the data:
+    if args.scaler.lower() == "log":
+        data = log_scale(data)
+    elif args.scaler.lower() == "minmax":
+        data = minmax_scale(data)
 
     # Builds the model, sets the device
     temporal_model = Temporal_Learning(args.model, input_size, hidden_size,
