@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
-import pickle
 
 '''
     Trains network using GPU, if available. Otherwise uses CPU.
@@ -91,12 +90,9 @@ def pass_legal_args():
 '''
 def minmax_scale(data):
     scaler = MinMaxScaler(feature_range=(0,1))
-    data_scaled = scaler.fit_transform(np.transpose(data))
-    # Saves the scaler object to invert the output later:
-    #with open('Scalers/MinMaxScaler.pkl', 'wb') as f:  
-    #    pickle.dump(scaler, f)  
+    data_scaled = scaler.fit_transform(np.transpose(data)) 
         
-    return np.transpose(data_scaled)
+    return np.transpose(data_scaled), scaler
 
 '''
     If in Log Scaling mode, transforms input in 2 dimensions
@@ -106,8 +102,6 @@ def log_scale(data, log_base=12):
     # make sure all samples are positive
     inc = 1 + abs(np.amin(data)) 
     data += inc
-    print(np.amin(data))
-    print(np.amax(data))
     scaler = lambda t: log(t, log_base)
     scaler = np.vectorize(scaler)
     data_scaled = scaler(data)                   
@@ -129,11 +123,11 @@ def inv_logscale(data, inc, log_base=12):
     for training the rnn
 """ 
 def create_dataset(data, input_size, device):
-    train_input = torch.from_numpy(data[6:29, :]).to(device)
-    train_output = torch.from_numpy(data[6:29, input_size:]).to(device)
+    train_input = torch.from_numpy(data[4:29, :]).to(device)
+    train_output = torch.from_numpy(data[4:29, input_size:]).to(device)
     
-    test_input = torch.from_numpy(data[:6, :]).to(device)
-    test_output = torch.from_numpy(data[:6, input_size:]).to(device)
+    test_input = torch.from_numpy(data[:4, :]).to(device)
+    test_output = torch.from_numpy(data[:4, input_size:]).to(device)
     
     validation_input = torch.from_numpy(data[29:, :]).to(device)
     validation_output = torch.from_numpy(data[29:, input_size:]).to(device)
@@ -172,7 +166,7 @@ def main():
     if args.scaler.lower() == "log":
         data, inc = log_scale(data)
     elif args.scaler.lower() == "minmax":
-        data = minmax_scale(data)
+        data, scaler = minmax_scale(data)
 
     # Builds the model, sets the device
     temporal_model = Temporal_Learning(args.model, input_size, hidden_size,
@@ -194,16 +188,19 @@ def main():
                                   criterion, args.future, device)   
             
     model_output = test_model(temporal_model, validation_input, 
-                                validation_output, criterion, 
-                                args.future, device) 
+                              validation_output, criterion, 
+                              args.future, device) 
     if args.save == True:
         save_model(temporal_model, args.optimizer.lower(), 
                     args.model.lower())
 
     for i in range(1):
         if args.scaler.lower() == "minmax":
-            plot_results(validation_input.numpy()[i,input_size:], 
-                         model_output[i,:], args, i)
+            inp = validation_input.numpy()[i,input_size:].reshape(-1,1)
+            out = model_output[i,:-1].reshape(-1,1)
+            plot_results(inp, out, args, i) # scaled
+
+            # TODO: now inverse scaling and plot again
         elif args.scaler.lower() == "log":
             # inverse scales the log scaled validation data and model output:
             input_inverted = inv_logscale(validation_input.numpy()
