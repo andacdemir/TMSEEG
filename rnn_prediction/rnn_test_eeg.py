@@ -126,14 +126,14 @@ def create_dataset(data, input_size, device):
     train_input = torch.from_numpy(data[4:29, :]).to(device)
     train_output = torch.from_numpy(data[4:29, input_size:]).to(device)
     
-    test_input = torch.from_numpy(data[:4, :]).to(device)
-    test_output = torch.from_numpy(data[:4, input_size:]).to(device)
+    validation_input = torch.from_numpy(data[:4, :]).to(device)
+    validation_output = torch.from_numpy(data[:4, input_size:]).to(device)
     
-    validation_input = torch.from_numpy(data[29:, :]).to(device)
-    validation_output = torch.from_numpy(data[29:, input_size:]).to(device)
+    test_input = torch.from_numpy(data[29:, :]).to(device)
+    test_output = torch.from_numpy(data[29:, input_size:]).to(device)
     
-    return train_input, train_output, test_input, test_output, \
-           validation_input, validation_output
+    return train_input, train_output, validation_input, validation_output, \
+           test_input, test_output
 
 '''
     Draws the results.
@@ -174,9 +174,9 @@ def main():
     temporal_model, device = set_device(temporal_model)
 
     # Splits the data for train/test input/output
-    train_input, train_output, test_input, test_output, \
-    validation_input, validation_output = create_dataset(data, input_size, 
-                                                         device)
+    train_input, train_output, validation_input, validation_output, \
+    test_input, test_output = create_dataset(data, input_size, 
+                                                   device)
     criterion, optimizer, epochs = set_optimization(temporal_model, 
                                                     args.optimizer)  
     
@@ -184,18 +184,19 @@ def main():
         print('Epoch: ', epoch+1)
         train_model(temporal_model, train_input, train_output, optimizer, 
                     criterion, device)
-        test_predict = test_model(temporal_model, test_input, test_output, 
-                                  criterion, args.future, device)   
+        validation_predict = test_model(temporal_model, validation_input, 
+                                  validation_output, criterion, args.future,
+                                  device)   
             
-    model_output = test_model(temporal_model, validation_input, 
-                              validation_output, criterion, 
+    model_output = test_model(temporal_model, test_input, 
+                              test_output, criterion, 
                               args.future, device) 
     if args.save == True:
         save_model(temporal_model, args.optimizer.lower(), 
                     args.model.lower())
 
     if args.scaler.lower() == "minmax":
-        inp = validation_input.numpy()[0,input_size:].reshape(-1,1)
+        inp = test_input.numpy()[0,input_size:].reshape(-1,1)
         out = model_output[0,:-1].reshape(-1,1)
         plot_results(inp, out, args) # scaled
         # now inverse scaling and plots again
@@ -205,8 +206,7 @@ def main():
         plot_results(real_inp, real_out, args) # scaled
     elif args.scaler.lower() == "log":
         # inverse scales the log scaled validation data and model output:
-        input_inverted = inv_logscale(validation_input.numpy()
-                                        [0,input_size:], inc)
+        input_inverted = inv_logscale(test_input.numpy()[0,input_size:], inc)
         output_inverted = inv_logscale(model_output[0,:], inc)
         plot_results(input_inverted, output_inverted, args)
 
