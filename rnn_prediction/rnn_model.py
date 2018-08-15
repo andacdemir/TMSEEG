@@ -107,8 +107,8 @@ def set_optimization(model, optimizer):
     # L-BFGS is also well suited if we can load all data to train and the 
     # optimization requires to solve large number of variables
     elif optimizer.lower() == 'l-bfgs':
-        optimizer = optim.LBFGS(model.parameters(), lr=0.8)
-        epochs = 25
+        optimizer = optim.LBFGS(model.parameters(), lr=0.4)
+        epochs = 50
     return criterion, optimizer, epochs
     
 '''

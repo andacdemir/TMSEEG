@@ -123,26 +123,16 @@ def create_dataset(data, input_size, device):
 '''
     Draws the results.
 '''
-def plot_results(input, model_output, input_size, args):
-    plt.figure(figsize=(30,10))
-    plt.title('Predict Future Time Sequences\n(Dashlines are Predicted '
+def plot_results(actual_output, model_output, args, i):
+    plt.plot(actual_output, 'r', label='Actual')
+    plt.plot(model_output, 'b', label='Prediction')
+    plt.title('Predict Future Time Sequences\n(Dashlines are Predicted '    
               'Values)', fontsize=30)
-    plt.xlabel('Time (Discrete)', fontsize=20)
-    plt.ylabel('TMS Intensity (mV)', fontsize=20)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    def draw(y, color):
-        plt.plot(np.arange(input.size(1)-input_size), 
-                 y[:input.size(1)-input_size], color, linewidth=2.0)
-        plt.plot(np.arange(input.size(1)-input_size, input.size(1)+args.future-
-                                                                   input_size), 
-                 y[input.size(1)-input_size:], color + ':', linewidth=2.0)
-    
-    draw(model_output[0], 'r')
-    draw(model_output[1], 'g')
-    draw(model_output[2], 'b')
-    plt.savefig('MSO%s_ch%s_%s_%s.pdf'%(args.intensity, args.channel, 
-                args.model.lower(), args.optimizer.lower()))
+    plt.ylabel('Amplitude')
+    plt.xlabel('Time (Discrete)')
+    plt.legend()
+    plt.savefig('MSO%s_ch%s_%s_%s_%d.pdf'%(args.intensity, args.channel, 
+                args.model.lower(), args.optimizer.lower(), i))
     plt.show()
 
 def main():
@@ -182,8 +172,9 @@ def main():
     
     if args.save == True:
         save_model(temporal_model, args.optimizer.lower(), args.model.lower())
-    
-    plot_results(test_input, model_output, input_size, args)
+    for i in range(3):
+        plot_results(test_input.numpy()[i,input_size:], model_output[i,:], 
+                     args, i)
 
 
 if __name__ == "__main__":
