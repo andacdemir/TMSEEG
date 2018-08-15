@@ -173,8 +173,8 @@ def main():
     if args.save == True:
         save_model(temporal_model, args.optimizer.lower(), args.model.lower())
     for i in range(3):
-        plot_results(test_input.numpy()[i,input_size:], model_output[i,:], 
-                     args, i)
+        plot_results(test_input.numpy()[i,input_size:], 
+                     model_output[i,:input_size], args, i)
 
 
 if __name__ == "__main__":
