@@ -5,8 +5,8 @@ import scipy.io as spio
 class parser:
     
     filepath = '../tmseegData.mat'
-    start = 9990
-    end = 10090
+    start = 9980
+    end = 10020
 
     ''' 
         Loads the .mat files for the melon data and the tms-eeg data
