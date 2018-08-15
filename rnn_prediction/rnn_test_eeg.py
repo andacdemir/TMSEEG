@@ -100,34 +100,46 @@ def minmax_scale(data):
 
 '''
     If in Log Scaling mode, transforms input in 2 dimensions
-    with a log function of base 5.
+    with a log function of base 12.
 '''
-def log_scale(data, log_base=5):
+def log_scale(data, log_base=12):
     # make sure all samples are positive
     inc = 1 + abs(np.amin(data)) 
     data += inc
     print(np.amin(data))
+    print(np.amax(data))
     scaler = lambda t: log(t, log_base)
     scaler = np.vectorize(scaler)
     data_scaled = scaler(data)                   
     return data_scaled, inc
 
-def inv_logscale(data, inc, log_base=5):
-    data = np.power(data, log_base)
+'''
+    Converts the data that is log scaled back to the original scale.
+'''
+def inv_logscale(data, inc, log_base=12):
+    data = np.power(log_base, data)
     data -= inc
     return data
 
 """
-    Inputs begin from the first index go until the index before the last
-    Targets begin from the second index go until the last 
-    so the model always predicts the next sample
+    Splits the trials into train, test and validation sets.
+    Inputs take the the entire array
+    Outputs begin from the index input_size
+    So the model can always look back input_size number of samples
+    for training the rnn
 """ 
 def create_dataset(data, input_size, device):
-    train_input = torch.from_numpy(data[3:, :]).to(device)
-    train_output = torch.from_numpy(data[3:, input_size:]).to(device)
-    test_input = torch.from_numpy(data[:3, :]).to(device)
-    test_output = torch.from_numpy(data[:3, input_size:]).to(device)
-    return train_input, train_output, test_input, test_output
+    train_input = torch.from_numpy(data[6:29, :]).to(device)
+    train_output = torch.from_numpy(data[6:29, input_size:]).to(device)
+    
+    test_input = torch.from_numpy(data[:6, :]).to(device)
+    test_output = torch.from_numpy(data[:6, input_size:]).to(device)
+    
+    validation_input = torch.from_numpy(data[29:, :]).to(device)
+    validation_output = torch.from_numpy(data[29:, input_size:]).to(device)
+    
+    return train_input, train_output, test_input, test_output, \
+           validation_input, validation_output
 
 '''
     Draws the results.
@@ -168,27 +180,34 @@ def main():
     temporal_model, device = set_device(temporal_model)
 
     # Splits the data for train/test input/output
-    train_input, train_output, test_input, test_output = create_dataset(data,
-                                                          input_size, device)
+    train_input, train_output, test_input, test_output, \
+    validation_input, validation_output = create_dataset(data, input_size, 
+                                                         device)
     criterion, optimizer, epochs = set_optimization(temporal_model, 
                                                     args.optimizer)  
+    
     for epoch in range(epochs):
         print('Epoch: ', epoch+1)
         train_model(temporal_model, train_input, train_output, optimizer, 
                     criterion, device)
-        model_output = test_model(temporal_model, test_input, test_output, 
-                                  criterion, args.future, device)    
-    
+        test_predict = test_model(temporal_model, test_input, test_output, 
+                                  criterion, args.future, device)   
+            
+    model_output = test_model(temporal_model, validation_input, 
+                                validation_output, criterion, 
+                                args.future, device) 
     if args.save == True:
-        save_model(temporal_model, args.optimizer.lower(), args.model.lower())
-    for i in range(3):
+        save_model(temporal_model, args.optimizer.lower(), 
+                    args.model.lower())
+
+    for i in range(1):
         if args.scaler.lower() == "minmax":
-            plot_results(test_input.numpy()[i,input_size:-input_size], 
+            plot_results(validation_input.numpy()[i,input_size:], 
                          model_output[i,:], args, i)
         elif args.scaler.lower() == "log":
-            # inverse scales the log scaled test input and model output:
-            input_inverted = inv_logscale(test_input.numpy()[i,input_size:
-                                                             -input_size], inc)
+            # inverse scales the log scaled validation data and model output:
+            input_inverted = inv_logscale(validation_input.numpy()
+                                          [i,input_size:], inc)
             output_inverted = inv_logscale(model_output[i,:], inc)
             plot_results(input_inverted, output_inverted, args, i)
 
