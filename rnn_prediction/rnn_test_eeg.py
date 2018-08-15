@@ -103,10 +103,19 @@ def minmax_scale(data):
     with a log function of base 5.
 '''
 def log_scale(data, log_base=5):
+    # make sure all samples are positive
+    inc = 1 + abs(np.amin(data)) 
+    data += inc
+    print(np.amin(data))
     scaler = lambda t: log(t, log_base)
     scaler = np.vectorize(scaler)
     data_scaled = scaler(data)                   
-    return data_scaled
+    return data_scaled, inc
+
+def inv_logscale(data, inc, log_base=5):
+    data = np.power(data, log_base)
+    data -= inc
+    return data
 
 """
     Inputs begin from the first index go until the index before the last
@@ -137,7 +146,7 @@ def plot_results(actual_output, model_output, args, i):
 
 def main():
     args = pass_legal_args()
-    dropout = 0.3
+    dropout = 0.5
     hidden_size, input_size = 64, 5
        
     # Loads the TMS-EEG data of desired intensity and from desired channel
@@ -149,7 +158,7 @@ def main():
 
     # Scaling the data:
     if args.scaler.lower() == "log":
-        data = log_scale(data)
+        data, inc = log_scale(data)
     elif args.scaler.lower() == "minmax":
         data = minmax_scale(data)
 
@@ -173,8 +182,15 @@ def main():
     if args.save == True:
         save_model(temporal_model, args.optimizer.lower(), args.model.lower())
     for i in range(3):
-        plot_results(test_input.numpy()[i,input_size:], 
-                     model_output[i,:-input_size], args, i)
+        if args.scaler.lower() == "minmax":
+            plot_results(test_input.numpy()[i,input_size:-input_size], 
+                         model_output[i,:], args, i)
+        elif args.scaler.lower() == "log":
+            # inverse scales the log scaled test input and model output:
+            input_inverted = inv_logscale(test_input.numpy()[i,input_size:
+                                                             -input_size], inc)
+            output_inverted = inv_logscale(model_output[i,:], inc)
+            plot_results(input_inverted, output_inverted, args, i)
 
 
 if __name__ == "__main__":
