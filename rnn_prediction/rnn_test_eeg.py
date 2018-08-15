@@ -138,7 +138,7 @@ def create_dataset(data, input_size, device):
 '''
     Draws the results.
 '''
-def plot_results(actual_output, model_output, args, i):
+def plot_results(actual_output, model_output, args):
     plt.plot(actual_output, 'r', label='Actual')
     plt.plot(model_output, 'b', label='Prediction')
     plt.title('Predict Future Time Sequences\n(Dashlines are Predicted '    
@@ -146,8 +146,8 @@ def plot_results(actual_output, model_output, args, i):
     plt.ylabel('Amplitude')
     plt.xlabel('Time (Discrete)')
     plt.legend()
-    plt.savefig('MSO%s_ch%s_%s_%s_%d.pdf'%(args.intensity, args.channel, 
-                args.model.lower(), args.optimizer.lower(), i))
+    plt.savefig('MSO%s_ch%s_%s_%s.pdf'%(args.intensity, args.channel, 
+                args.model.lower(), args.optimizer.lower()))
     plt.show()
 
 def main():
@@ -160,13 +160,13 @@ def main():
     dp.get_intensity(args.intensity) # Calls the get_intensity method
     dp.get_channel(args.channel)     # Calls the get_channel method
     # Model expects object type of double tensor, write as type 'float32'
-    data = np.transpose(dp.channel_data).astype('float64')
+    unscaled_data = np.transpose(dp.channel_data).astype('float64')
 
     # Scaling the data:
     if args.scaler.lower() == "log":
-        data, inc = log_scale(data)
+        data, inc = log_scale(unscaled_data)
     elif args.scaler.lower() == "minmax":
-        data, scaler = minmax_scale(data)
+        data, scaler = minmax_scale(unscaled_data)
 
     # Builds the model, sets the device
     temporal_model = Temporal_Learning(args.model, input_size, hidden_size,
@@ -194,19 +194,21 @@ def main():
         save_model(temporal_model, args.optimizer.lower(), 
                     args.model.lower())
 
-    for i in range(1):
-        if args.scaler.lower() == "minmax":
-            inp = validation_input.numpy()[i,input_size:].reshape(-1,1)
-            out = model_output[i,:-1].reshape(-1,1)
-            plot_results(inp, out, args, i) # scaled
-
-            # TODO: now inverse scaling and plot again
-        elif args.scaler.lower() == "log":
-            # inverse scales the log scaled validation data and model output:
-            input_inverted = inv_logscale(validation_input.numpy()
-                                          [i,input_size:], inc)
-            output_inverted = inv_logscale(model_output[i,:], inc)
-            plot_results(input_inverted, output_inverted, args, i)
+    if args.scaler.lower() == "minmax":
+        inp = validation_input.numpy()[0,input_size:].reshape(-1,1)
+        out = model_output[0,:-1].reshape(-1,1)
+        plot_results(inp, out, args) # scaled
+        # now inverse scaling and plots again
+        a, b = np.amin(unscaled_data[-1,:]), np.amax(unscaled_data[-1,:])
+        real_inp = inp * (b - a) + a
+        real_out = out * (b - a) + a
+        plot_results(real_inp, real_out, args) # scaled
+    elif args.scaler.lower() == "log":
+        # inverse scales the log scaled validation data and model output:
+        input_inverted = inv_logscale(validation_input.numpy()
+                                        [0,input_size:], inc)
+        output_inverted = inv_logscale(model_output[0,:], inc)
+        plot_results(input_inverted, output_inverted, args)
 
 
 if __name__ == "__main__":
