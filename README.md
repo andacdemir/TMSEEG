@@ -12,8 +12,14 @@ Both LSTM and GRU networks have 2 stacks of hidden layers with each having 64 hi
 
 Model is compiled seperately using **Adam optimizer** with a decaying learning rate initialized as 0.005 and **L-BFGS** with a decaying learning rate initialized as 0.5. L-BFGS is a Quasi-Newton method that estimates inverse Hessian matrix to steer its search through variable space. Although L-BFGS is **memory-greedy**, it is a lot more numerically stable than the variants of stochastic optimization in finding local minima and maxima. Hence it is well-suited for small datasets. In the optimization process, the objective function was **mean square error**, because stability was more important than robustness in the fitting process. 
 
-Since the range of the samples varies between the order of magnitudes 10<sup>5</sup> and 10<sup>-3</sup>, before model training data processing was essential. The data for each EEG trial was scaled using a linear scaling method **Min-Max** and non-linear scaling method **Log-Scaling** with a log base of 5. The results show the lowest loss in the predictions was obtained by using Min-Max scaling during data processing, GRUs for setting the RNN architecture, and L-BFGS for optimization. 
+Since the range of the samples varies between the order of magnitudes 10<sup>-3</sup> and 10<sup>5</sup>, before model training data processing was essential. The data for each EEG trial was scaled using a linear scaling method **Min-Max** and non-linear scaling method **Log-Scaling** with a log base of 5. The results show the lowest loss in the predictions was obtained by using Min-Max scaling during data processing, GRUs for setting the RNN architecture, and L-BFGS for optimization. 
 
 Since the dataset per EEG channel is composed of only 30 TMS stimulations,  in order to avoid the network’s possible  proneness  to  overfitting,  the  model  was trained with only 22 trials, validated with 5 trials and tested with 3 trials. No cross-validation was applied. In the training step, the hidden states were adjusted at each epoch, while the during validation neither weights were adjusted nor parameters were tuned, only the loss function was tracked to validate the network does not overfit. In testing, the final model was tested on dataset that has not been seen before in order to confirm the actual predictive power of the network.
 
 The code parses arguments from the command line, available for optimization with both quasi-Newton based L-BFGS and a variant of stochastic optimization Adam as well as LSTM and GRU for creating the network architecture and Min-Max / log scaling for data processing. The model was tested with dummy data generated from a sinusoid, Mackey-Glass time series and a multiple sine wave oscillator before training on the TMS-EEG dataset.
+
+Author: Andac Demir
+
+Contact: andacdemir@gmail.com
+
+[Web Page](https://www.andacdemir.com/)
